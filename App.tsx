@@ -26,8 +26,19 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-brand-500/20 shadow-lg">C</div>
-              <span className="font-bold text-lg tracking-tight text-slate-900">Clarity</span>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <img
+                      src="https://storage.expressnext.app/ENextLogo.png"
+                      alt="Logo"
+                      className="h-7 w-7"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 blur-lg opacity-40" />
+                </div>
+                <span className="text-2xl font-mono font-bold bg-gradient-to-r from-blue-500 to-green-500 bg-clip-text text-transparent">
+        ExpressNext
+      </span>
+              </div>
             </div>
             {hasSubmitted && (
                 <div className="flex items-center">
@@ -44,13 +55,6 @@ const App: React.FC = () => {
         {!hasSubmitted ? (
           <div className="animate-fade-in-up">
             <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl mb-4">
-                Let's scale your vision.
-              </h1>
-              <p className="max-w-2xl mx-auto text-lg text-slate-600">
-                Complete this intake to help us understand your business bottleneck. 
-                Our AI will instantly analyze your submission to prepare for our strategic consult.
-              </p>
             </div>
             <IntakeWizard onAnalysisComplete={handleAnalysisComplete} />
           </div>

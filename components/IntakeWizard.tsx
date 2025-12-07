@@ -29,7 +29,7 @@ interface IntakeWizardProps {
 }
 
 export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }) => {
-  const [step, setStep] = useState<FormStep>(FormStep.BASICS);
+  const [step, setStep] = useState<FormStep>(FormStep.WELCOME);
   const [formData, setFormData] = useState<IntakeFormData>(INITIAL_DATA);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -101,11 +101,38 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
 
   return (
     <div className="max-w-2xl mx-auto">
-      {renderStepIndicator()}
+      {step !== FormStep.WELCOME && renderStepIndicator()}
       
       <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 relative overflow-hidden min-h-[500px] flex flex-col">
         {/* Decorative background blob */}
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-brand-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+        {step === FormStep.WELCOME && (
+          <div className="space-y-8 animate-fade-in relative z-10 flex-grow flex flex-col items-center justify-center text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
+              Thank You for Booking!
+            </h1>
+
+            <div className="space-y-2">
+              <p className="text-lg font-semibold text-brand-600 uppercase tracking-wide">
+                Express Next Information Form
+              </p>
+              <p className="text-slate-600">
+                Required to fill this out before call
+              </p>
+            </div>
+
+            <p className="text-sm text-slate-500 italic">
+              *takes 1 minute*
+            </p>
+
+            <div className="pt-4">
+              <Button onClick={nextStep}>
+                Let's Get Started <ChevronRightIcon />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {step === FormStep.BASICS && (
           <div className="space-y-6 animate-fade-in relative z-10 flex-grow">

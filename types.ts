@@ -38,6 +38,7 @@ export interface AnalysisResult {
 }
 
 export enum FormStep {
+  WELCOME = -1,
   BASICS = 0,
   CURRENT_REALITY = 1,
   PROCESS_OPS = 2,
