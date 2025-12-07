@@ -1,0 +1,5 @@
+{
+  "name": "Clarity Intake & AI Analyst",
+  "description": "A high-conversion intake wizard that captures prospect data and uses Gemini to generate an instant pre-call strategy dossier for the consultant.",
+  "requestFramePermissions": []
+}
