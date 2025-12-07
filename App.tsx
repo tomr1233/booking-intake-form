@@ -51,13 +51,9 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="py-12 px-4 sm:px-6">
+      <main className={hasSubmitted ? "py-12 px-4 sm:px-6" : ""}>
         {!hasSubmitted ? (
-          <div className="animate-fade-in-up">
-            <div className="text-center mb-12">
-            </div>
-            <IntakeWizard onAnalysisComplete={handleAnalysisComplete} />
-          </div>
+          <IntakeWizard onAnalysisComplete={handleAnalysisComplete} />
         ) : (
           formData && analysis && (
             <AnalysisDashboard 
@@ -79,11 +75,25 @@ const App: React.FC = () => {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        @keyframes slideInFromRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
         .animate-fade-in-up {
             animation: fadeInUp 0.6s ease-out forwards;
         }
         .animate-fade-in {
             animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-slide-in {
+            animation: slideInFromRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .animate-scale-in {
+            animation: scaleIn 0.4s ease-out forwards;
         }
       `}</style>
     </div>
