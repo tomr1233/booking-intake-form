@@ -10,11 +10,15 @@ const INITIAL_DATA: IntakeFormData = {
   email: '',
   website: '',
   companyName: '',
+  reasonForBooking: '',
+  howDidYouHear: '',
   currentRevenue: '',
   teamSize: '',
   primaryService: '',
   averageDealSize: '',
   biggestBottleneck: '',
+  isDecisionMaker: '',
+  previousAgencyExperience: '',
   acquisitionSource: '',
   salesProcess: '',
   fulfillmentWorkflow: '',
@@ -23,6 +27,7 @@ const INITIAL_DATA: IntakeFormData = {
   dreamOutcome: '',
   magicWandScenario: '',
   commitmentLevel: 5,
+  timeline: '',
 };
 
 // Step metadata for sidebar navigation
@@ -162,7 +167,20 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               <TextInput label="Company Name" value={formData.companyName} onChange={e => updateField('companyName', e.target.value)} placeholder="Acme Inc." />
               <TextInput label="Website URL" value={formData.website} onChange={e => updateField('website', e.target.value)} placeholder="acme.com" />
             </div>
-            <div className="pt-6 flex justify-end">
+            <TextArea
+                label="Reason for Booking"
+                subLabel="What prompted you to book this call today?"
+                value={formData.reasonForBooking}
+                onChange={e => updateField('reasonForBooking', e.target.value)}
+                placeholder="I'm looking to scale my business and need help with..."
+            />
+            <TextInput
+                label="How did you hear about us?"
+                value={formData.howDidYouHear}
+                onChange={e => updateField('howDidYouHear', e.target.value)}
+                placeholder="Google, LinkedIn, referral, podcast..."
+            />
+            <div className="pt-4 flex justify-end mt-auto">
               <Button onClick={nextStep} disabled={!formData.firstName || !formData.email}>
                 Continue <ChevronRightIcon />
               </Button>
@@ -189,6 +207,31 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               placeholder="We have leads, but our closing rate is terrible..."
             />
             <div className="pt-6 flex justify-between">
+            
+            <TextArea
+                label="What is your BIGGEST bottleneck right now?"
+                subLabel="Be honest. What keeps you up at night?"
+                value={formData.biggestBottleneck}
+                onChange={e => updateField('biggestBottleneck', e.target.value)}
+                placeholder="We have leads, but our closing rate is terrible..."
+            />
+
+            <TextInput
+                label="Are you the decision-maker?"
+                value={formData.isDecisionMaker}
+                onChange={e => updateField('isDecisionMaker', e.target.value)}
+                placeholder="Yes / No, my business partner is also involved..."
+            />
+
+            <TextArea
+                label="Have you worked with an agency or consultant before?"
+                subLabel="If so, what was that experience like?"
+                value={formData.previousAgencyExperience}
+                onChange={e => updateField('previousAgencyExperience', e.target.value)}
+                placeholder="Yes, we worked with XYZ agency for 6 months. It was..."
+            />
+
+            <div className="pt-4 flex justify-between mt-auto">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={nextStep} disabled={!formData.currentRevenue || !formData.biggestBottleneck}>
                 Continue <ChevronRightIcon />
@@ -263,6 +306,20 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
                 value={formData.commitmentLevel}
                 onChange={(v) => updateField('commitmentLevel', v)}
               />
+            
+            <TextInput
+                label="Timeline — When are you looking to get started?"
+                value={formData.timeline}
+                onChange={e => updateField('timeline', e.target.value)}
+                placeholder="Immediately, within 2 weeks, next month..."
+            />
+
+            <div className="py-2">
+                <RangeSlider
+                    label="How committed are you to fixing this NOW?"
+                    value={formData.commitmentLevel}
+                    onChange={(v) => updateField('commitmentLevel', v)}
+                />
             </div>
             <div className="pt-6 flex justify-between">
               <Button variant="outline" onClick={prevStep}>Back</Button>

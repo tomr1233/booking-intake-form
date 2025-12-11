@@ -5,25 +5,30 @@ export interface IntakeFormData {
   email: string;
   website: string;
   companyName: string;
-  
+  reasonForBooking: string; // Why are they booking this call?
+  howDidYouHear: string; // Marketing channel tracking
+
   // Step 2: Current Reality (The Numbers)
   currentRevenue: string;
   teamSize: string;
   primaryService: string;
   averageDealSize: string; // Added for financial depth
   biggestBottleneck: string; // The "Pain"
-  
+  isDecisionMaker: string; // Are they the decision-maker?
+  previousAgencyExperience: string; // Past agency/consultant experience
+
   // Step 3: Process & Operations (The Machine)
   acquisitionSource: string; // How they get leads
   salesProcess: string; // How they close
   fulfillmentWorkflow: string; // How they deliver
   currentTechStack: string; // Tools they use
-  
+
   // Step 4: Desired Future (The Vision)
   revenueGoal: string;
   dreamOutcome: string; // The "Gain"
   magicWandScenario: string; // "If you could wave a magic wand..."
   commitmentLevel: number; // 1-10
+  timeline: string; // When are they looking to get started?
 }
 
 export interface AnalysisResult {
