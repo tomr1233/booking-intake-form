@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { IntakeFormData, FormStep, AnalysisResult } from '../types';
 import { analyzeIntakeForm } from '../services/geminiService';
-import { TextInput, TextArea, RangeSlider, Button, CheckIcon, ChevronRightIcon } from './UIComponents';
+import { TextInput, TextArea, RangeSlider, Button, ChevronRightIcon } from './UIComponents';
+import { FormMainContent } from './FormMainContent';
 
 const INITIAL_DATA: IntakeFormData = {
   firstName: '',
@@ -29,26 +30,68 @@ const INITIAL_DATA: IntakeFormData = {
   timeline: '',
 };
 
+// Step metadata for sidebar navigation
+const FORM_STEPS = [
+  {
+    id: 'basics',
+    label: 'The Basics',
+    subtitle: "Let's get acquainted",
+    title: 'Who are you?',
+    description: "We'd love to know a bit about you and your company. This helps us tailor your experience.",
+  },
+  {
+    id: 'numbers',
+    label: 'Numbers',
+    subtitle: 'Your metrics matter',
+    title: 'Current Reality',
+    description: 'Tell us about where your business stands today. The numbers help us understand your scale.',
+  },
+  {
+    id: 'process',
+    label: 'Process',
+    subtitle: 'How you work',
+    title: 'Process & Operations',
+    description: 'Help us understand the mechanics of your business from acquisition to delivery.',
+  },
+  {
+    id: 'vision',
+    label: 'Vision',
+    subtitle: "Where you're headed",
+    title: 'The Vision',
+    description: 'What does success look like for you? Share your goals and dreams.',
+  },
+];
+
 interface IntakeWizardProps {
   onAnalysisComplete: (data: IntakeFormData, analysis: AnalysisResult) => void;
 }
 
 export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }) => {
-  const [step, setStep] = useState<FormStep>(FormStep.BASICS);
+  const [step, setStep] = useState<FormStep>(FormStep.WELCOME);
   const [formData, setFormData] = useState<IntakeFormData>(INITIAL_DATA);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [highestStepReached, setHighestStepReached] = useState<FormStep>(FormStep.WELCOME);
 
   const updateField = (field: keyof IntakeFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const nextStep = () => {
-    // Basic validation could go here
-    setStep(prev => prev + 1);
+    setStep(prev => {
+      const next = prev + 1;
+      setHighestStepReached(current => Math.max(current, next) as FormStep);
+      return next;
+    });
   };
 
   const prevStep = () => {
     setStep(prev => prev - 1);
+  };
+
+  const goToStep = (targetStep: number) => {
+    if (targetStep <= highestStepReached && targetStep >= FormStep.BASICS) {
+      setStep(targetStep);
+    }
   };
 
   const handleSubmit = async () => {
@@ -64,65 +107,65 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
     }
   };
 
-  // --- Render Steps ---
-
-  const renderStepIndicator = () => {
-    const steps = [
-      { id: FormStep.BASICS, label: 'The Basics' },
-      { id: FormStep.CURRENT_REALITY, label: 'Numbers' },
-      { id: FormStep.PROCESS_OPS, label: 'Process' },
-      { id: FormStep.DREAM_FUTURE, label: 'Vision' },
-    ];
-
-    return (
-      <div className="mb-10">
-        <div className="flex items-center justify-between relative">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-100 -z-10 rounded-full"></div>
-          {steps.map((s, idx) => {
-            const isActive = step === s.id;
-            const isCompleted = step > s.id;
-            
-            return (
-              <div key={s.id} className="flex flex-col items-center bg-white px-2">
-                <div 
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 ${
-                        isActive ? 'border-brand-600 bg-brand-600 text-white shadow-lg shadow-brand-200' : 
-                        isCompleted ? 'border-brand-600 bg-white text-brand-600' : 
-                        'border-slate-200 bg-white text-slate-300'
-                    }`}
-                >
-                    {isCompleted ? <CheckIcon /> : idx + 1}
-                </div>
-                <span className={`text-xs font-medium mt-2 transition-colors duration-300 ${isActive ? 'text-brand-700' : 'text-slate-400'}`}>
-                    {s.label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      {renderStepIndicator()}
-      
+  // --- Render Welcome Screen ---
+  const renderWelcome = () => (
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12 animate-scale-in">
+    <div className="max-w-2xl mx-auto px-4 w-full">
       <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 relative overflow-hidden min-h-[500px] flex flex-col">
         {/* Decorative background blob */}
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-brand-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
-        {step === FormStep.BASICS && (
-          <div className="space-y-6 animate-fade-in relative z-10 flex-grow">
-            <h2 className="text-2xl font-bold text-slate-800">Who are you?</h2>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-8 animate-fade-in relative z-10 flex-grow flex flex-col items-center justify-center text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
+            Thank You for Booking!
+          </h1>
+
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-brand-600 uppercase tracking-wide">
+              Express Next Information Form
+            </p>
+            <p className="text-slate-600">
+              Required to fill this out before call
+            </p>
+          </div>
+
+          <p className="text-sm text-slate-500 italic">
+            *takes 1 minute*
+          </p>
+
+          <div className="pt-4">
+            <Button onClick={nextStep}>
+              Let's Get Started <ChevronRightIcon />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Privacy Note */}
+      <p className="text-center text-xs text-slate-400 mt-6">
+        <span className="inline-flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+          Your information is secure and confidential.
+        </span>
+      </p>
+    </div>
+    </div>
+  );
+
+  // --- Render Step Content ---
+  const renderStepContent = () => {
+    switch (step) {
+      case FormStep.BASICS:
+        return (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextInput label="First Name" value={formData.firstName} onChange={e => updateField('firstName', e.target.value)} placeholder="Jane" />
               <TextInput label="Last Name" value={formData.lastName} onChange={e => updateField('lastName', e.target.value)} placeholder="Doe" />
             </div>
             <TextInput label="Work Email" type="email" value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@company.com" />
-            <div className="grid grid-cols-2 gap-4">
-                <TextInput label="Company Name" value={formData.companyName} onChange={e => updateField('companyName', e.target.value)} placeholder="Acme Inc." />
-                <TextInput label="Website URL" value={formData.website} onChange={e => updateField('website', e.target.value)} placeholder="acme.com" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TextInput label="Company Name" value={formData.companyName} onChange={e => updateField('companyName', e.target.value)} placeholder="Acme Inc." />
+              <TextInput label="Website URL" value={formData.website} onChange={e => updateField('website', e.target.value)} placeholder="acme.com" />
             </div>
             <TextArea
                 label="Reason for Booking"
@@ -139,23 +182,31 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
             />
             <div className="pt-4 flex justify-end mt-auto">
               <Button onClick={nextStep} disabled={!formData.firstName || !formData.email}>
-                Next Step <ChevronRightIcon />
+                Continue <ChevronRightIcon />
               </Button>
             </div>
-          </div>
-        )}
+          </>
+        );
 
-        {step === FormStep.CURRENT_REALITY && (
-          <div className="space-y-6 animate-fade-in relative z-10 flex-grow">
-            <h2 className="text-2xl font-bold text-slate-800">Current Reality (The Numbers)</h2>
-            <div className="grid grid-cols-2 gap-4">
+      case FormStep.CURRENT_REALITY:
+        return (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextInput label="Current Monthly Revenue" value={formData.currentRevenue} onChange={e => updateField('currentRevenue', e.target.value)} placeholder="$50k/mo" />
               <TextInput label="Average Deal Size ($)" value={formData.averageDealSize} onChange={e => updateField('averageDealSize', e.target.value)} placeholder="$2,500" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-                <TextInput label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} placeholder="5 employees" />
-                <TextInput label="Primary Service/Product" value={formData.primaryService} onChange={e => updateField('primaryService', e.target.value)} placeholder="e.g. SEO Services" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <TextInput label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} placeholder="5 employees" />
+              <TextInput label="Primary Service/Product" value={formData.primaryService} onChange={e => updateField('primaryService', e.target.value)} placeholder="e.g. SEO Services" />
             </div>
+            <TextArea
+              label="What is your BIGGEST bottleneck right now?"
+              subLabel="Be honest. What keeps you up at night?"
+              value={formData.biggestBottleneck}
+              onChange={e => updateField('biggestBottleneck', e.target.value)}
+              placeholder="We have leads, but our closing rate is terrible..."
+            />
+            <div className="pt-6 flex justify-between">
             
             <TextArea
                 label="What is your BIGGEST bottleneck right now?"
@@ -183,79 +234,78 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
             <div className="pt-4 flex justify-between mt-auto">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={nextStep} disabled={!formData.currentRevenue || !formData.biggestBottleneck}>
-                Next Step <ChevronRightIcon />
+                Continue <ChevronRightIcon />
               </Button>
             </div>
-          </div>
-        )}
+          </>
+        );
 
-        {step === FormStep.PROCESS_OPS && (
-          <div className="space-y-6 animate-fade-in relative z-10 flex-grow">
-            <h2 className="text-2xl font-bold text-slate-800">Process & Operations (Deep Dive)</h2>
-            <p className="text-slate-500 text-sm -mt-4">Help us understand the mechanics of your business.</p>
-            
-            <TextArea 
-                label="Acquisition: How do strangers become leads?"
-                subLabel="Cold outreach? Ads? Referrals? Walk us through the top of funnel."
-                value={formData.acquisitionSource}
-                onChange={e => updateField('acquisitionSource', e.target.value)}
-                placeholder="We mostly rely on referrals, but we're trying Facebook ads with mixed results..."
-                className="min-h-[100px]"
+      case FormStep.PROCESS_OPS:
+        return (
+          <>
+            <TextArea
+              label="Acquisition: How do strangers become leads?"
+              subLabel="Cold outreach? Ads? Referrals? Walk us through the top of funnel."
+              value={formData.acquisitionSource}
+              onChange={e => updateField('acquisitionSource', e.target.value)}
+              placeholder="We mostly rely on referrals, but we're trying Facebook ads with mixed results..."
+              className="min-h-[100px]"
             />
-
-            <TextArea 
-                label="Sales: What is your sales process?"
-                subLabel="Who takes the calls? How many steps? Do you use a script?"
-                value={formData.salesProcess}
-                onChange={e => updateField('salesProcess', e.target.value)}
-                placeholder="I take all the calls personally. It's a 2-call close..."
-                className="min-h-[100px]"
+            <TextArea
+              label="Sales: What is your sales process?"
+              subLabel="Who takes the calls? How many steps? Do you use a script?"
+              value={formData.salesProcess}
+              onChange={e => updateField('salesProcess', e.target.value)}
+              placeholder="I take all the calls personally. It's a 2-call close..."
+              className="min-h-[100px]"
             />
-
-            <TextArea 
-                label="Fulfillment: How is the work delivered?"
-                subLabel="Is it custom every time? Productized? Who handles delivery?"
-                value={formData.fulfillmentWorkflow}
-                onChange={e => updateField('fulfillmentWorkflow', e.target.value)}
-                placeholder="It's very manual. I have to oversee every project..."
-                className="min-h-[100px]"
+            <TextArea
+              label="Fulfillment: How is the work delivered?"
+              subLabel="Is it custom every time? Productized? Who handles delivery?"
+              value={formData.fulfillmentWorkflow}
+              onChange={e => updateField('fulfillmentWorkflow', e.target.value)}
+              placeholder="It's very manual. I have to oversee every project..."
+              className="min-h-[100px]"
             />
-
-            <TextInput 
-                label="Key Tech Stack" 
-                value={formData.currentTechStack} 
-                onChange={e => updateField('currentTechStack', e.target.value)} 
-                placeholder="HubSpot, Slack, ClickUp, Zapier..." 
+            <TextInput
+              label="Key Tech Stack"
+              value={formData.currentTechStack}
+              onChange={e => updateField('currentTechStack', e.target.value)}
+              placeholder="HubSpot, Slack, ClickUp, Zapier..."
             />
-
-            <div className="pt-4 flex justify-between mt-auto">
+            <div className="pt-6 flex justify-between">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={nextStep} disabled={!formData.acquisitionSource}>
-                Next Step <ChevronRightIcon />
+                Continue <ChevronRightIcon />
               </Button>
             </div>
-          </div>
-        )}
+          </>
+        );
 
-        {step === FormStep.DREAM_FUTURE && (
-          <div className="space-y-6 animate-fade-in relative z-10 flex-grow">
-            <h2 className="text-2xl font-bold text-slate-800">The Vision (Desired Future)</h2>
+      case FormStep.DREAM_FUTURE:
+        return (
+          <>
             <TextInput label="Revenue Goal (12 months)" value={formData.revenueGoal} onChange={e => updateField('revenueGoal', e.target.value)} placeholder="$200k/mo" />
-            
-            <TextArea 
-                label="Describe your Dream Outcome"
-                subLabel="Beyond money, what does success look like for your lifestyle?"
-                value={formData.dreamOutcome}
-                onChange={e => updateField('dreamOutcome', e.target.value)}
-                placeholder="I want to remove myself from delivery and focus on strategy..."
+            <TextArea
+              label="Describe your Dream Outcome"
+              subLabel="Beyond money, what does success look like for your lifestyle?"
+              value={formData.dreamOutcome}
+              onChange={e => updateField('dreamOutcome', e.target.value)}
+              placeholder="I want to remove myself from delivery and focus on strategy..."
             />
-             <TextArea 
-                label="The Magic Wand Question"
-                subLabel="If you could wave a magic wand and fix one thing instantly, what would it be?"
-                value={formData.magicWandScenario}
-                onChange={e => updateField('magicWandScenario', e.target.value)}
-                placeholder="I would instantly clone my best sales rep..."
+            <TextArea
+              label="The Magic Wand Question"
+              subLabel="If you could wave a magic wand and fix one thing instantly, what would it be?"
+              value={formData.magicWandScenario}
+              onChange={e => updateField('magicWandScenario', e.target.value)}
+              placeholder="I would instantly clone my best sales rep..."
             />
+            <div className="py-2">
+              <RangeSlider
+                label="How committed are you to fixing this NOW?"
+                value={formData.commitmentLevel}
+                onChange={(v) => updateField('commitmentLevel', v)}
+              />
             
             <TextInput
                 label="Timeline — When are you looking to get started?"
@@ -271,24 +321,42 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
                     onChange={(v) => updateField('commitmentLevel', v)}
                 />
             </div>
-
-            <div className="pt-4 flex justify-between mt-auto">
+            <div className="pt-6 flex justify-between">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={handleSubmit} isLoading={isAnalyzing} disabled={isAnalyzing}>
                 {isAnalyzing ? 'Analyzing...' : 'Submit Application'}
               </Button>
             </div>
-          </div>
-        )}
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // --- Render Form Layout (Centered Content) ---
+  const renderFormLayout = () => {
+    const currentStepData = FORM_STEPS[step];
+
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center animate-fade-in">
+        <FormMainContent
+          stepIndex={step}
+          stepsCount={FORM_STEPS.length}
+          title={currentStepData.title}
+          description={currentStepData.description}
+        >
+          {renderStepContent()}
+        </FormMainContent>
       </div>
-      
-      {/* Privacy Note */}
-      <p className="text-center text-xs text-slate-400 mt-6">
-        <span className="inline-flex items-center gap-1">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          Your information is secure and confidential.
-        </span>
-      </p>
-    </div>
+    );
+  };
+
+  // --- Main Render ---
+  return (
+    <>
+      {step === FormStep.WELCOME ? renderWelcome() : renderFormLayout()}
+    </>
   );
 };
