@@ -206,16 +206,6 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               onChange={e => updateField('biggestBottleneck', e.target.value)}
               placeholder="We have leads, but our closing rate is terrible..."
             />
-            <div className="pt-6 flex justify-between">
-            
-            <TextArea
-                label="What is your BIGGEST bottleneck right now?"
-                subLabel="Be honest. What keeps you up at night?"
-                value={formData.biggestBottleneck}
-                onChange={e => updateField('biggestBottleneck', e.target.value)}
-                placeholder="We have leads, but our closing rate is terrible..."
-            />
-
             <TextInput
                 label="Are you the decision-maker?"
                 value={formData.isDecisionMaker}
@@ -300,13 +290,6 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               onChange={e => updateField('magicWandScenario', e.target.value)}
               placeholder="I would instantly clone my best sales rep..."
             />
-            <div className="py-2">
-              <RangeSlider
-                label="How committed are you to fixing this NOW?"
-                value={formData.commitmentLevel}
-                onChange={(v) => updateField('commitmentLevel', v)}
-              />
-            
             <TextInput
                 label="Timeline — When are you looking to get started?"
                 value={formData.timeline}
