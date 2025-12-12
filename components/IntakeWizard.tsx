@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IntakeFormData, FormStep, AnalysisResult } from '../types';
 import { analyzeIntakeForm } from '../services/geminiService';
-import { TextInput, TextArea, RangeSlider, Button, ChevronRightIcon } from './UIComponents';
+import { TextInput, TextArea, RangeSlider, Button, ChevronRightIcon, Select } from './UIComponents';
 import { FormMainContent } from './FormMainContent';
 
 const INITIAL_DATA: IntakeFormData = {
@@ -47,19 +47,64 @@ const FORM_STEPS = [
     description: 'Tell us about where your business stands today. The numbers help us understand your scale.',
   },
   {
-    id: 'process',
-    label: 'Process',
-    subtitle: 'How you work',
-    title: 'Process & Operations',
-    description: 'Help us understand the mechanics of your business from acquisition to delivery.',
-  },
-  {
     id: 'vision',
     label: 'Vision',
     subtitle: "Where you're headed",
     title: 'The Vision',
     description: 'What does success look like for you? Share your goals and dreams.',
   },
+];
+
+// Dropdown options
+const HOW_DID_YOU_HEAR_OPTIONS = [
+  { value: 'google', label: 'Google' },
+  { value: 'linkedin', label: 'LinkedIn' },
+  { value: 'referral', label: 'Referral' },
+  { value: 'podcast', label: 'Podcast' },
+  { value: 'social_media', label: 'Social Media' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'other', label: 'Other' },
+];
+
+const REVENUE_OPTIONS = [
+  { value: '<10k', label: '<$10k' },
+  { value: '10k-25k', label: '$10k-$25k' },
+  { value: '25k-50k', label: '$25k-$50k' },
+  { value: '50k-100k', label: '$50k-$100k' },
+  { value: '100k-250k', label: '$100k-$250k' },
+  { value: '250k+', label: '$250k+' },
+];
+
+const TEAM_SIZE_OPTIONS = [
+  { value: '1', label: 'Just me' },
+  { value: '2-5', label: '2-5' },
+  { value: '6-10', label: '6-10' },
+  { value: '11-25', label: '11-25' },
+  { value: '26-50', label: '26-50' },
+  { value: '50+', label: '50+' },
+];
+
+const DEAL_SIZE_OPTIONS = [
+  { value: '<500', label: '<$500' },
+  { value: '500-1k', label: '$500-$1k' },
+  { value: '1k-2.5k', label: '$1k-$2.5k' },
+  { value: '2.5k-5k', label: '$2.5k-$5k' },
+  { value: '5k-10k', label: '$5k-$10k' },
+  { value: '10k+', label: '$10k+' },
+];
+
+const DECISION_MAKER_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No - need partner/team approval' },
+  { value: 'partial', label: 'Partial - final say on some decisions' },
+];
+
+const TIMELINE_OPTIONS = [
+  { value: 'immediately', label: 'Immediately' },
+  { value: '2_weeks', label: 'Within 2 weeks' },
+  { value: '1_month', label: 'Within a month' },
+  { value: '1-3_months', label: '1-3 months' },
+  { value: 'exploring', label: 'Just exploring' },
 ];
 
 interface IntakeWizardProps {
@@ -174,11 +219,12 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
                 onChange={e => updateField('reasonForBooking', e.target.value)}
                 placeholder="I'm looking to scale my business and need help with..."
             />
-            <TextInput
+            <Select
                 label="How did you hear about us?"
                 value={formData.howDidYouHear}
                 onChange={e => updateField('howDidYouHear', e.target.value)}
-                placeholder="Google, LinkedIn, referral, podcast..."
+                options={HOW_DID_YOU_HEAR_OPTIONS}
+                placeholder="Select an option..."
             />
             <div className="pt-4 flex justify-end mt-auto">
               <Button onClick={nextStep} disabled={!formData.firstName || !formData.email}>
@@ -192,11 +238,11 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
         return (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextInput label="Current Monthly Revenue" value={formData.currentRevenue} onChange={e => updateField('currentRevenue', e.target.value)} placeholder="$50k/mo" />
-              <TextInput label="Average Deal Size ($)" value={formData.averageDealSize} onChange={e => updateField('averageDealSize', e.target.value)} placeholder="$2,500" />
+              <Select label="Current Monthly Revenue" value={formData.currentRevenue} onChange={e => updateField('currentRevenue', e.target.value)} options={REVENUE_OPTIONS} placeholder="Select revenue range..." />
+              <Select label="Average Deal Size ($)" value={formData.averageDealSize} onChange={e => updateField('averageDealSize', e.target.value)} options={DEAL_SIZE_OPTIONS} placeholder="Select deal size..." />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextInput label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} placeholder="5 employees" />
+              <Select label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} options={TEAM_SIZE_OPTIONS} placeholder="Select team size..." />
               <TextInput label="Primary Service/Product" value={formData.primaryService} onChange={e => updateField('primaryService', e.target.value)} placeholder="e.g. SEO Services" />
             </div>
             <TextArea
@@ -206,21 +252,12 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               onChange={e => updateField('biggestBottleneck', e.target.value)}
               placeholder="We have leads, but our closing rate is terrible..."
             />
-            <div className="pt-6 flex justify-between">
-            
-            <TextArea
-                label="What is your BIGGEST bottleneck right now?"
-                subLabel="Be honest. What keeps you up at night?"
-                value={formData.biggestBottleneck}
-                onChange={e => updateField('biggestBottleneck', e.target.value)}
-                placeholder="We have leads, but our closing rate is terrible..."
-            />
-
-            <TextInput
+            <Select
                 label="Are you the decision-maker?"
                 value={formData.isDecisionMaker}
                 onChange={e => updateField('isDecisionMaker', e.target.value)}
-                placeholder="Yes / No, my business partner is also involved..."
+                options={DECISION_MAKER_OPTIONS}
+                placeholder="Select an option..."
             />
 
             <TextArea
@@ -234,48 +271,6 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
             <div className="pt-4 flex justify-between mt-auto">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={nextStep} disabled={!formData.currentRevenue || !formData.biggestBottleneck}>
-                Continue <ChevronRightIcon />
-              </Button>
-            </div>
-          </>
-        );
-
-      case FormStep.PROCESS_OPS:
-        return (
-          <>
-            <TextArea
-              label="Acquisition: How do strangers become leads?"
-              subLabel="Cold outreach? Ads? Referrals? Walk us through the top of funnel."
-              value={formData.acquisitionSource}
-              onChange={e => updateField('acquisitionSource', e.target.value)}
-              placeholder="We mostly rely on referrals, but we're trying Facebook ads with mixed results..."
-              className="min-h-[100px]"
-            />
-            <TextArea
-              label="Sales: What is your sales process?"
-              subLabel="Who takes the calls? How many steps? Do you use a script?"
-              value={formData.salesProcess}
-              onChange={e => updateField('salesProcess', e.target.value)}
-              placeholder="I take all the calls personally. It's a 2-call close..."
-              className="min-h-[100px]"
-            />
-            <TextArea
-              label="Fulfillment: How is the work delivered?"
-              subLabel="Is it custom every time? Productized? Who handles delivery?"
-              value={formData.fulfillmentWorkflow}
-              onChange={e => updateField('fulfillmentWorkflow', e.target.value)}
-              placeholder="It's very manual. I have to oversee every project..."
-              className="min-h-[100px]"
-            />
-            <TextInput
-              label="Key Tech Stack"
-              value={formData.currentTechStack}
-              onChange={e => updateField('currentTechStack', e.target.value)}
-              placeholder="HubSpot, Slack, ClickUp, Zapier..."
-            />
-            <div className="pt-6 flex justify-between">
-              <Button variant="outline" onClick={prevStep}>Back</Button>
-              <Button onClick={nextStep} disabled={!formData.acquisitionSource}>
                 Continue <ChevronRightIcon />
               </Button>
             </div>
@@ -300,18 +295,12 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               onChange={e => updateField('magicWandScenario', e.target.value)}
               placeholder="I would instantly clone my best sales rep..."
             />
-            <div className="py-2">
-              <RangeSlider
-                label="How committed are you to fixing this NOW?"
-                value={formData.commitmentLevel}
-                onChange={(v) => updateField('commitmentLevel', v)}
-              />
-            
-            <TextInput
+            <Select
                 label="Timeline — When are you looking to get started?"
                 value={formData.timeline}
                 onChange={e => updateField('timeline', e.target.value)}
-                placeholder="Immediately, within 2 weeks, next month..."
+                options={TIMELINE_OPTIONS}
+                placeholder="Select a timeline..."
             />
 
             <div className="py-2">

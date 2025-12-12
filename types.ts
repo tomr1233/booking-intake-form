@@ -46,7 +46,6 @@ export enum FormStep {
   WELCOME = -1,
   BASICS = 0,
   CURRENT_REALITY = 1,
-  PROCESS_OPS = 2,
-  DREAM_FUTURE = 3,
-  REVIEW = 4,
+  DREAM_FUTURE = 2,
+  REVIEW = 3,
 }
