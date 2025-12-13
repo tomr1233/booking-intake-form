@@ -13,6 +13,7 @@ export interface IntakeFormData {
   teamSize: string;
   primaryService: string;
   averageDealSize: string; // Added for financial depth
+  marketingBudget: string; // Sales/marketing budget for growth
   biggestBottleneck: string; // The "Pain"
   isDecisionMaker: string; // Are they the decision-maker?
   previousAgencyExperience: string; // Past agency/consultant experience
@@ -24,11 +25,9 @@ export interface IntakeFormData {
   currentTechStack: string; // Tools they use
 
   // Step 4: Desired Future (The Vision)
-  revenueGoal: string;
-  dreamOutcome: string; // The "Gain"
-  magicWandScenario: string; // "If you could wave a magic wand..."
-  commitmentLevel: number; // 1-10
-  timeline: string; // When are they looking to get started?
+  desiredOutcome: string; // What outcome would make this worth it
+  desiredSpeed: string; // Desired speed of results
+  readyToScale: string; // Ready to scale with a growth system
 }
 
 export interface AnalysisResult {

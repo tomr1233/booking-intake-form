@@ -37,7 +37,7 @@ const analysisSchema: Schema = {
     },
     closingStrategy: {
       type: Type.STRING,
-      description: "A specific angle to pitch the solution based on their 'Magic Wand' answer.",
+      description: "A specific angle to pitch the solution based on their desired outcome.",
     },
     estimatedFitScore: {
       type: Type.INTEGER,
@@ -71,10 +71,8 @@ export const analyzeIntakeForm = async (data: IntakeFormData): Promise<AnalysisR
       Tech Stack: ${data.currentTechStack}
       
       FUTURE GOALS:
-      Revenue Goal: ${data.revenueGoal}
-      Dream Outcome: ${data.dreamOutcome}
-      Magic Wand Scenario: ${data.magicWandScenario}
-      Self-Rated Commitment: ${data.commitmentLevel}/10
+      Desired Outcome: ${data.desiredOutcome}
+      Desired Speed: ${data.desiredSpeed}
       
       Your goal is to prepare me for the sales call. 
       Identify the gap between their current reality and desired future.

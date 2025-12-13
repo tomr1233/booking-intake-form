@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IntakeFormData, FormStep, AnalysisResult } from '../types';
 import { analyzeIntakeForm } from '../services/geminiService';
-import { TextInput, TextArea, RangeSlider, Button, ChevronRightIcon, Select } from './UIComponents';
+import { TextInput, TextArea, Button, ChevronRightIcon, Select } from './UIComponents';
 import { FormMainContent } from './FormMainContent';
 
 const INITIAL_DATA: IntakeFormData = {
@@ -16,6 +16,7 @@ const INITIAL_DATA: IntakeFormData = {
   teamSize: '',
   primaryService: '',
   averageDealSize: '',
+  marketingBudget: '',
   biggestBottleneck: '',
   isDecisionMaker: '',
   previousAgencyExperience: '',
@@ -23,11 +24,9 @@ const INITIAL_DATA: IntakeFormData = {
   salesProcess: '',
   fulfillmentWorkflow: '',
   currentTechStack: '',
-  revenueGoal: '',
-  dreamOutcome: '',
-  magicWandScenario: '',
-  commitmentLevel: 5,
-  timeline: '',
+  desiredOutcome: '',
+  desiredSpeed: '',
+  readyToScale: '',
 };
 
 // Step metadata for sidebar navigation
@@ -37,21 +36,21 @@ const FORM_STEPS = [
     label: 'The Basics',
     subtitle: "Let's get acquainted",
     title: 'Who are you?',
-    description: "We'd love to know a bit about you and your company. This helps us tailor your experience.",
+    description: "We'd love to know a bit about you and your company.",
   },
   {
     id: 'numbers',
     label: 'Numbers',
     subtitle: 'Your metrics matter',
     title: 'Current Reality',
-    description: 'Tell us about where your business stands today. The numbers help us understand your scale.',
+    description: 'Tell us about where your business stands today.',
   },
   {
     id: 'vision',
     label: 'Vision',
     subtitle: "Where you're headed",
     title: 'The Vision',
-    description: 'What does success look like for you? Share your goals and dreams.',
+    description: 'What does success look like for you? If we worked together what would success look like.',
   },
 ];
 
@@ -99,12 +98,32 @@ const DECISION_MAKER_OPTIONS = [
   { value: 'partial', label: 'Partial - final say on some decisions' },
 ];
 
+const MARKETING_BUDGET_OPTIONS = [
+  { value: 'none', label: 'No budget set aside' },
+  { value: '<1k', label: '<$1k/month' },
+  { value: '1k-2.5k', label: '$1k-$2.5k/month' },
+  { value: '2.5k-5k', label: '$2.5k-$5k/month' },
+  { value: '5k-10k', label: '$5k-$10k/month' },
+  { value: '10k+', label: '$10k+/month' },
+];
+
 const TIMELINE_OPTIONS = [
   { value: 'immediately', label: 'Immediately' },
   { value: '2_weeks', label: 'Within 2 weeks' },
   { value: '1_month', label: 'Within a month' },
   { value: '1-3_months', label: '1-3 months' },
   { value: 'exploring', label: 'Just exploring' },
+];
+
+const DESIRED_SPEED_OPTIONS = [
+  { value: 'slow', label: 'Slow but steady' },
+  { value: 'medium', label: 'Scale quickly in 90 days' },
+  { value: 'aggressive', label: 'Aggressive growth' },
+];
+
+const READY_TO_SCALE_OPTIONS = [
+  { value: 'yes', label: 'Yes, I\'m ready' },
+  { value: 'unsure', label: 'Not sure yet' },
 ];
 
 interface IntakeWizardProps {
@@ -245,6 +264,13 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               <Select label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} options={TEAM_SIZE_OPTIONS} placeholder="Select team size..." />
               <TextInput label="Primary Service/Product" value={formData.primaryService} onChange={e => updateField('primaryService', e.target.value)} placeholder="e.g. SEO Services" />
             </div>
+            <Select
+              label="Do you have a sales/marketing budget set aside for growth?"
+              value={formData.marketingBudget}
+              onChange={e => updateField('marketingBudget', e.target.value)}
+              options={MARKETING_BUDGET_OPTIONS}
+              placeholder="Select budget range..."
+            />
             <TextArea
               label="What is your BIGGEST bottleneck right now?"
               subLabel="Be honest. What keeps you up at night?"
@@ -280,36 +306,26 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
       case FormStep.DREAM_FUTURE:
         return (
           <>
-            <TextInput label="Revenue Goal (12 months)" value={formData.revenueGoal} onChange={e => updateField('revenueGoal', e.target.value)} placeholder="$200k/mo" />
             <TextArea
-              label="Describe your Dream Outcome"
-              subLabel="Beyond money, what does success look like for your lifestyle?"
-              value={formData.dreamOutcome}
-              onChange={e => updateField('dreamOutcome', e.target.value)}
-              placeholder="I want to remove myself from delivery and focus on strategy..."
-            />
-            <TextArea
-              label="The Magic Wand Question"
-              subLabel="If you could wave a magic wand and fix one thing instantly, what would it be?"
-              value={formData.magicWandScenario}
-              onChange={e => updateField('magicWandScenario', e.target.value)}
-              placeholder="I would instantly clone my best sales rep..."
+              label="If we worked together, what outcome would make this worth it for you?"
+              value={formData.desiredOutcome}
+              onChange={e => updateField('desiredOutcome', e.target.value)}
+              placeholder="e.g., Double my revenue, free up my time, finally scale..."
             />
             <Select
-                label="Timeline — When are you looking to get started?"
-                value={formData.timeline}
-                onChange={e => updateField('timeline', e.target.value)}
-                options={TIMELINE_OPTIONS}
-                placeholder="Select a timeline..."
+              label="Desired Speed of Results"
+              value={formData.desiredSpeed}
+              onChange={e => updateField('desiredSpeed', e.target.value)}
+              options={DESIRED_SPEED_OPTIONS}
+              placeholder="Select your pace..."
             />
-
-            <div className="py-2">
-                <RangeSlider
-                    label="How committed are you to fixing this NOW?"
-                    value={formData.commitmentLevel}
-                    onChange={(v) => updateField('commitmentLevel', v)}
-                />
-            </div>
+            <Select
+              label="Are you ready to scale your business with a growth system if we're the right fit?"
+              value={formData.readyToScale}
+              onChange={e => updateField('readyToScale', e.target.value)}
+              options={READY_TO_SCALE_OPTIONS}
+              placeholder="Select an option..."
+            />
             <div className="pt-6 flex justify-between">
               <Button variant="outline" onClick={prevStep}>Back</Button>
               <Button onClick={handleSubmit} isLoading={isAnalyzing} disabled={isAnalyzing}>
