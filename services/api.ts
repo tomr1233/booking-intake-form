@@ -1,6 +1,7 @@
 import { IntakeFormData, AnalysisResult } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+// Use same origin in production (empty string), localhost in development
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8080' : '');
 
 export interface SubmissionResponse {
   id: string;
