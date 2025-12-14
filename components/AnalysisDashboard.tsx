@@ -97,17 +97,16 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ data, anal
                 </p>
                 <div className="flex flex-wrap gap-3">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                        Current: {data.currentRevenue}
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-700 border border-brand-200">
-                        Goal: {data.revenueGoal}
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                        Commitment: {data.commitmentLevel}/10
+                        Revenue: {data.currentRevenue}
                     </span>
                     {data.averageDealSize && (
                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
                             Deal Size: {data.averageDealSize}
+                        </span>
+                    )}
+                    {data.teamSize && (
+                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            Team: {data.teamSize}
                         </span>
                     )}
                 </div>

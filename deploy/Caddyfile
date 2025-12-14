@@ -1,0 +1,25 @@
+# Replace YOUR_DOMAIN with your actual domain (e.g., clarity.example.com)
+# Caddy will automatically obtain and renew SSL certificates
+
+{$DOMAIN:localhost} {
+    # API requests -> backend
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    # Health check endpoint
+    handle /health {
+        reverse_proxy backend:8080
+    }
+
+    # Everything else -> frontend
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}

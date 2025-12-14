@@ -341,14 +341,217 @@ backend/
    }
    ```
 
-### Phase 5: Frontend Updates (separate task)
+### Phase 5: Frontend Updates
 After backend is complete, update frontend:
 1. Install react-router-dom: `npm install react-router-dom`
 2. Create `services/api.ts` for backend calls
-3. Create `ThankYouPage.tsx` component
-4. Create `AdminResultsPage.tsx` (reuse AnalysisDashboard)
-5. Update `App.tsx` with routes
-6. Update `IntakeWizard.tsx` to POST to backend and redirect
+3. Create `components/ThankYouPage.tsx` component
+4. Create `components/AdminResultsPage.tsx` (reuse AnalysisDashboard)
+5. Update `App.tsx` with React Router
+6. Update `components/IntakeWizard.tsx` to POST to backend and redirect
+7. Delete or keep `services/geminiService.ts` (no longer used - AI runs on backend)
+
+---
+
+## Detailed Frontend Changes
+
+### Files to Create
+
+**1. `services/api.ts`** - Backend API client
+```typescript
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
+export interface SubmissionResponse {
+  id: string;
+  adminUrl: string;
+}
+
+export interface AdminResponse {
+  submission: IntakeFormData;
+  analysis: AnalysisResult | null;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: string;
+}
+
+export async function submitIntakeForm(data: IntakeFormData): Promise<SubmissionResponse> {
+  const response = await fetch(`${API_URL}/api/submissions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Submission failed');
+  return response.json();
+}
+
+export async function getAdminResults(token: string): Promise<AdminResponse> {
+  const response = await fetch(`${API_URL}/api/admin/${token}`);
+  if (!response.ok) throw new Error('Failed to fetch results');
+  return response.json();
+}
+```
+
+**2. `components/ThankYouPage.tsx`** - Shown after submission
+```typescript
+import React from 'react';
+
+export const ThankYouPage: React.FC = () => {
+  return (
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12">
+      <div className="max-w-2xl mx-auto px-4 text-center">
+        <div className="bg-white rounded-2xl shadow-xl p-10">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-800 mb-4">Thank You!</h1>
+          <p className="text-slate-600 mb-2">Your application has been submitted successfully.</p>
+          <p className="text-slate-500 text-sm">We'll review your information and see you on the call!</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+**3. `components/AdminResultsPage.tsx`** - Admin view with polling
+```typescript
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { getAdminResults, AdminResponse } from '../services/api';
+import { AnalysisDashboard } from './AnalysisDashboard';
+
+export const AdminResultsPage: React.FC = () => {
+  const { token } = useParams<{ token: string }>();
+  const [data, setData] = useState<AdminResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchResults = async () => {
+      try {
+        const result = await getAdminResults(token);
+        setData(result);
+
+        // Keep polling if still processing
+        if (result.status === 'pending' || result.status === 'processing') {
+          setTimeout(fetchResults, 3000); // Poll every 3 seconds
+        }
+      } catch (e) {
+        setError('Failed to load results');
+      }
+    };
+
+    fetchResults();
+  }, [token]);
+
+  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (!data) return <div className="p-8">Loading...</div>;
+
+  if (data.status === 'pending' || data.status === 'processing') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-slate-600">Analyzing submission...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.status === 'failed' || !data.analysis) {
+    return <div className="p-8 text-red-600">Analysis failed. Please try again.</div>;
+  }
+
+  return (
+    <div className="py-12 px-4 sm:px-6">
+      <AnalysisDashboard
+        data={data.submission}
+        analysis={data.analysis}
+        onReset={() => {}} // No reset for admin view
+      />
+    </div>
+  );
+};
+```
+
+### Files to Modify
+
+**1. `App.tsx`** - Add React Router
+```typescript
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { IntakeWizard } from './components/IntakeWizard';
+import { ThankYouPage } from './components/ThankYouPage';
+import { AdminResultsPage } from './components/AdminResultsPage';
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+          {/* ... existing nav code ... */}
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<IntakeWizard />} />
+          <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route path="/admin/:token" element={<AdminResultsPage />} />
+        </Routes>
+
+        {/* ... existing styles ... */}
+      </div>
+    </BrowserRouter>
+  );
+};
+
+export default App;
+```
+
+**2. `components/IntakeWizard.tsx`** - POST to backend, redirect
+```typescript
+// Remove this import:
+// import { analyzeIntakeForm } from '../services/geminiService';
+
+// Add these imports:
+import { useNavigate } from 'react-router-dom';
+import { submitIntakeForm } from '../services/api';
+
+// Remove the prop interface and onAnalysisComplete prop:
+// interface IntakeWizardProps {
+//   onAnalysisComplete: (data: IntakeFormData, analysis: AnalysisResult) => void;
+// }
+
+export const IntakeWizard: React.FC = () => {
+  const navigate = useNavigate();
+  // ... existing state ...
+
+  const handleSubmit = async () => {
+    setIsAnalyzing(true);
+    try {
+      await submitIntakeForm(formData);
+      navigate('/thank-you');
+    } catch (e) {
+      console.error(e);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // ... rest of component unchanged ...
+};
+```
+
+### Files to Delete (optional)
+- `services/geminiService.ts` - No longer needed, AI runs on backend
+
+### Environment Variables
+Add to `.env.local`:
+```
+VITE_API_URL=http://localhost:8080
+```
 
 ---
 

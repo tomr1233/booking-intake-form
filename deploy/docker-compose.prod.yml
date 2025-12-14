@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Reverse Proxy (Caddy with automatic HTTPS)
+  caddy:
+    image: caddy:2-alpine
+    container_name: clarity-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - clarity-network
+
+  # Frontend (React/Vite)
+  frontend:
+    build:
+      context: ../
+      dockerfile: deploy/Dockerfile
+      args:
+        VITE_API_URL: ""  # Empty = same origin, API at /api
+    container_name: clarity-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - clarity-network
+
+  # Backend (Go API)
+  backend:
+    build:
+      context: ../../intake-form-api
+      dockerfile: Dockerfile
+    container_name: clarity-backend
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - DATABASE_URL=postgres://clarity:${DB_PASSWORD}@postgres:5432/clarity_intake?sslmode=disable
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PORT=8080
+      - GIN_MODE=release
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - clarity-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: clarity-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clarity
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: clarity_intake
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clarity -d clarity_intake"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - clarity-network
+
+networks:
+  clarity-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

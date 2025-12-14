@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { IntakeFormData, FormStep, AnalysisResult } from '../types';
-import { analyzeIntakeForm } from '../services/geminiService';
+import { useNavigate } from 'react-router-dom';
+import { IntakeFormData, FormStep } from '../types';
+import { submitIntakeForm } from '../services/api';
 import { TextInput, TextArea, Button, ChevronRightIcon, Select } from './UIComponents';
 import { FormMainContent } from './FormMainContent';
 
@@ -17,7 +18,6 @@ const INITIAL_DATA: IntakeFormData = {
   primaryService: '',
   averageDealSize: '',
   marketingBudget: '',
-  biggestBottleneck: '',
   isDecisionMaker: '',
   previousAgencyExperience: '',
   acquisitionSource: '',
@@ -42,7 +42,7 @@ const FORM_STEPS = [
     id: 'numbers',
     label: 'Numbers',
     subtitle: 'Your metrics matter',
-    title: 'Current Reality',
+    title: 'Your Metrics',
     description: 'Tell us about where your business stands today.',
   },
   {
@@ -126,19 +126,24 @@ const READY_TO_SCALE_OPTIONS = [
   { value: 'unsure', label: 'Not sure yet' },
 ];
 
-interface IntakeWizardProps {
-  onAnalysisComplete: (data: IntakeFormData, analysis: AnalysisResult) => void;
-}
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
-export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }) => {
+export const IntakeWizard: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<FormStep>(FormStep.WELCOME);
   const [formData, setFormData] = useState<IntakeFormData>(INITIAL_DATA);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [highestStepReached, setHighestStepReached] = useState<FormStep>(FormStep.WELCOME);
 
   const updateField = (field: keyof IntakeFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const emailIsValid = formData.email === '' || isValidEmail(formData.email);
+  const canProceedBasics = formData.firstName.trim() !== '' && isValidEmail(formData.email);
 
   const nextStep = () => {
     setStep(prev => {
@@ -159,15 +164,15 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
   };
 
   const handleSubmit = async () => {
-    setIsAnalyzing(true);
+    setIsSubmitting(true);
     try {
-      const result = await analyzeIntakeForm(formData);
-      onAnalysisComplete(formData, result);
+      await submitIntakeForm(formData);
+      navigate('/thank-you');
     } catch (e) {
       console.error(e);
-      alert("Something went wrong with the AI analysis. Please try again.");
+      alert("Something went wrong. Please try again.");
     } finally {
-      setIsAnalyzing(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -226,7 +231,12 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               <TextInput label="First Name" value={formData.firstName} onChange={e => updateField('firstName', e.target.value)} placeholder="Jane" />
               <TextInput label="Last Name" value={formData.lastName} onChange={e => updateField('lastName', e.target.value)} placeholder="Doe" />
             </div>
-            <TextInput label="Work Email" type="email" value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@company.com" />
+            <div>
+              <TextInput label="Work Email" type="email" value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@company.com" />
+              {!emailIsValid && (
+                <p className="mt-1 text-sm text-red-500">Please enter a valid email address</p>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextInput label="Company Name" value={formData.companyName} onChange={e => updateField('companyName', e.target.value)} placeholder="Acme Inc." />
               <TextInput label="Website URL" value={formData.website} onChange={e => updateField('website', e.target.value)} placeholder="acme.com" />
@@ -246,7 +256,7 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
                 placeholder="Select an option..."
             />
             <div className="pt-4 flex justify-end mt-auto">
-              <Button onClick={nextStep} disabled={!formData.firstName || !formData.email}>
+              <Button onClick={nextStep} disabled={!canProceedBasics}>
                 Continue <ChevronRightIcon />
               </Button>
             </div>
@@ -271,13 +281,6 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
               options={MARKETING_BUDGET_OPTIONS}
               placeholder="Select budget range..."
             />
-            <TextArea
-              label="What is your BIGGEST bottleneck right now?"
-              subLabel="Be honest. What keeps you up at night?"
-              value={formData.biggestBottleneck}
-              onChange={e => updateField('biggestBottleneck', e.target.value)}
-              placeholder="We have leads, but our closing rate is terrible..."
-            />
             <Select
                 label="Are you the decision-maker?"
                 value={formData.isDecisionMaker}
@@ -296,7 +299,7 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
 
             <div className="pt-4 flex justify-between mt-auto">
               <Button variant="outline" onClick={prevStep}>Back</Button>
-              <Button onClick={nextStep} disabled={!formData.currentRevenue || !formData.biggestBottleneck}>
+              <Button onClick={nextStep} disabled={!formData.currentRevenue}>
                 Continue <ChevronRightIcon />
               </Button>
             </div>
@@ -328,8 +331,8 @@ export const IntakeWizard: React.FC<IntakeWizardProps> = ({ onAnalysisComplete }
             />
             <div className="pt-6 flex justify-between">
               <Button variant="outline" onClick={prevStep}>Back</Button>
-              <Button onClick={handleSubmit} isLoading={isAnalyzing} disabled={isAnalyzing}>
-                {isAnalyzing ? 'Analyzing...' : 'Submit Application'}
+              <Button onClick={handleSubmit} isLoading={isSubmitting} disabled={isSubmitting}>
+                {isSubmitting ? 'Submitting...' : 'Submit Application'}
               </Button>
             </div>
           </>

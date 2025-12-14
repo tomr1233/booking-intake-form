@@ -14,7 +14,6 @@ export interface IntakeFormData {
   primaryService: string;
   averageDealSize: string; // Added for financial depth
   marketingBudget: string; // Sales/marketing budget for growth
-  biggestBottleneck: string; // The "Pain"
   isDecisionMaker: string; // Are they the decision-maker?
   previousAgencyExperience: string; // Past agency/consultant experience
 
