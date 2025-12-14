@@ -1,22 +1,4 @@
 services:
-  # Reverse Proxy (Caddy with automatic HTTPS)
-  caddy:
-    image: caddy:2-alpine
-    container_name: clarity-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - clarity-network
-
   # Frontend (React/Vite)
   frontend:
     build:
@@ -26,8 +8,8 @@ services:
         VITE_API_URL: ""  # Empty = same origin, API at /api
     container_name: clarity-frontend
     restart: unless-stopped
-    expose:
-      - "80"
+    ports:
+      - "3000:80"
     networks:
       - clarity-network
 
@@ -38,8 +20,8 @@ services:
       dockerfile: Dockerfile
     container_name: clarity-backend
     restart: unless-stopped
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     environment:
       - DATABASE_URL=postgres://clarity:${DB_PASSWORD}@postgres:5432/clarity_intake?sslmode=disable
       - GEMINI_API_KEY=${GEMINI_API_KEY}
@@ -77,5 +59,3 @@ networks:
 
 volumes:
   postgres_data:
-  caddy_data:
-  caddy_config:
