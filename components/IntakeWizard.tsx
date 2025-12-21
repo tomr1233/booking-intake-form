@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IntakeFormData, FormStep } from '../types';
 import { submitIntakeForm } from '../services/api';
 import { TextInput, TextArea, Button, ChevronRightIcon, Select } from './UIComponents';
@@ -137,6 +137,20 @@ export const IntakeWizard: React.FC = () => {
   const [formData, setFormData] = useState<IntakeFormData>(INITIAL_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [highestStepReached, setHighestStepReached] = useState<FormStep>(FormStep.WELCOME);
+  const [searchParams] = useSearchParams();
+
+  // Pre-fill form from URL query parameters
+  React.useEffect(() => {
+    const nameParam = searchParams.get('name');
+    const emailParam = searchParams.get('email');
+
+    if (nameParam) {
+      setFormData(prev => ({ ...prev, firstName: nameParam }));
+    }
+    if (emailParam) {
+      setFormData(prev => ({ ...prev, email: emailParam }));
+    }
+  }, [searchParams]);
 
   const updateField = (field: keyof IntakeFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -186,7 +200,9 @@ export const IntakeWizard: React.FC = () => {
 
         <div className="space-y-8 animate-fade-in relative z-10 flex-grow flex flex-col items-center justify-center text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800">
-            Thank You for Booking!
+            {searchParams.get('name')
+              ? `${searchParams.get('name')}, Thanks for Booking!`
+              : 'Thank You for Booking!'}
           </h1>
 
           <div className="space-y-2">
