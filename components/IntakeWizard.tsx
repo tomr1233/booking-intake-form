@@ -32,18 +32,11 @@ const INITIAL_DATA: IntakeFormData = {
 // Step metadata for sidebar navigation
 const FORM_STEPS = [
   {
-    id: 'basics',
-    label: 'The Basics',
-    subtitle: "Let's get acquainted",
-    title: 'Who are you?',
-    description: "We'd love to know a bit about you and your company.",
-  },
-  {
     id: 'numbers',
     label: 'Numbers',
     subtitle: 'Your metrics matter',
-    title: 'Your Metrics',
-    description: 'Tell us about where your business stands today.',
+    title: 'Helpful Details',
+    description: 'Helpful details to get started',
   },
   {
     id: 'vision',
@@ -172,7 +165,7 @@ export const IntakeWizard: React.FC = () => {
   };
 
   const goToStep = (targetStep: number) => {
-    if (targetStep <= highestStepReached && targetStep >= FormStep.BASICS) {
+    if (targetStep <= highestStepReached && targetStep >= FormStep.CURRENT_REALITY) {
       setStep(targetStep);
     }
   };
@@ -240,56 +233,9 @@ export const IntakeWizard: React.FC = () => {
   // --- Render Step Content ---
   const renderStepContent = () => {
     switch (step) {
-      case FormStep.BASICS:
-        return (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextInput label="First Name" value={formData.firstName} onChange={e => updateField('firstName', e.target.value)} placeholder="Jane" />
-              <TextInput label="Last Name" value={formData.lastName} onChange={e => updateField('lastName', e.target.value)} placeholder="Doe" />
-            </div>
-            <div>
-              <TextInput label="Work Email" type="email" value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@company.com" />
-              {!emailIsValid && (
-                <p className="mt-1 text-sm text-red-500">Please enter a valid email address</p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <TextInput label="Company Name" value={formData.companyName} onChange={e => updateField('companyName', e.target.value)} placeholder="Acme Inc." />
-              <TextInput label="Website URL" value={formData.website} onChange={e => updateField('website', e.target.value)} placeholder="acme.com" />
-            </div>
-            <TextArea
-                label="Reason for Booking"
-                subLabel="What prompted you to book this call today?"
-                value={formData.reasonForBooking}
-                onChange={e => updateField('reasonForBooking', e.target.value)}
-                placeholder="I'm looking to scale my business and need help with..."
-            />
-            <Select
-                label="How did you hear about us?"
-                value={formData.howDidYouHear}
-                onChange={e => updateField('howDidYouHear', e.target.value)}
-                options={HOW_DID_YOU_HEAR_OPTIONS}
-                placeholder="Select an option..."
-            />
-            <div className="pt-4 flex justify-end mt-auto">
-              <Button onClick={nextStep} disabled={!canProceedBasics}>
-                Continue <ChevronRightIcon />
-              </Button>
-            </div>
-          </>
-        );
-
       case FormStep.CURRENT_REALITY:
         return (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select label="Current Monthly Revenue" value={formData.currentRevenue} onChange={e => updateField('currentRevenue', e.target.value)} options={REVENUE_OPTIONS} placeholder="Select revenue range..." />
-              <Select label="Average Deal Size ($)" value={formData.averageDealSize} onChange={e => updateField('averageDealSize', e.target.value)} options={DEAL_SIZE_OPTIONS} placeholder="Select deal size..." />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select label="Team Size" value={formData.teamSize} onChange={e => updateField('teamSize', e.target.value)} options={TEAM_SIZE_OPTIONS} placeholder="Select team size..." />
-              <TextInput label="Primary Service/Product" value={formData.primaryService} onChange={e => updateField('primaryService', e.target.value)} placeholder="e.g. SEO Services" />
-            </div>
             <Select
               label="Do you have a sales/marketing budget set aside for growth?"
               value={formData.marketingBudget}
@@ -297,14 +243,6 @@ export const IntakeWizard: React.FC = () => {
               options={MARKETING_BUDGET_OPTIONS}
               placeholder="Select budget range..."
             />
-            <Select
-                label="Are you the decision-maker?"
-                value={formData.isDecisionMaker}
-                onChange={e => updateField('isDecisionMaker', e.target.value)}
-                options={DECISION_MAKER_OPTIONS}
-                placeholder="Select an option..."
-            />
-
             <TextArea
                 label="Have you worked with an agency or consultant before?"
                 subLabel="If so, what was that experience like?"
@@ -315,7 +253,7 @@ export const IntakeWizard: React.FC = () => {
 
             <div className="pt-4 flex justify-between mt-auto">
               <Button variant="outline" onClick={prevStep}>Back</Button>
-              <Button onClick={nextStep} disabled={!formData.currentRevenue}>
+              <Button onClick={nextStep}>
                 Continue <ChevronRightIcon />
               </Button>
             </div>
@@ -330,13 +268,6 @@ export const IntakeWizard: React.FC = () => {
               value={formData.desiredOutcome}
               onChange={e => updateField('desiredOutcome', e.target.value)}
               placeholder="e.g., Double my revenue, free up my time, finally scale..."
-            />
-            <Select
-              label="Desired Speed of Results"
-              value={formData.desiredSpeed}
-              onChange={e => updateField('desiredSpeed', e.target.value)}
-              options={DESIRED_SPEED_OPTIONS}
-              placeholder="Select your pace..."
             />
             <Select
               label="Are you ready to scale your business with a growth system if we're the right fit?"

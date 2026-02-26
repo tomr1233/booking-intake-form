@@ -42,8 +42,6 @@ export interface AnalysisResult {
 
 export enum FormStep {
   WELCOME = -1,
-  BASICS = 0,
-  CURRENT_REALITY = 1,
-  DREAM_FUTURE = 2,
-  REVIEW = 3,
+  CURRENT_REALITY = 0,
+  DREAM_FUTURE = 1,
 }
