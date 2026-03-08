@@ -35,7 +35,7 @@ const FORM_STEPS = [
     id: 'numbers',
     label: 'Numbers',
     subtitle: 'Your metrics matter',
-    title: 'testHelpful Details',
+    title: 'testHelpful Detailstest',
     description: 'Collecting these details will help us get started easily',
   },
   {
