@@ -4,8 +4,6 @@ services:
     build:
       context: ../
       dockerfile: deploy/Dockerfile
-      args:
-        VITE_API_URL: ""  # Empty = same origin, API at /api
     container_name: clarity-frontend
     restart: unless-stopped
     ports:

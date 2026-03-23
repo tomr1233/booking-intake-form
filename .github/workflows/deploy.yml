@@ -1,22 +1,39 @@
-name: Deploy to Production
+name: Build and Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /root/booking-intake-form &&
-            git pull origin main &&
-            cd deploy &&
-            docker compose -f docker-compose.prod.yml build --no-cache frontend &&
-            docker compose -f docker-compose.prod.yml up -d frontend
+          node-version: 20
+          cache: npm
+
+      - run: npm ci && npm run build
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        run: |
+          rsync -azP \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            --include='dist/***' \
+            --include='deploy/***' \
+            --exclude='*' \
+            ./ ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/root/booking-intake-form/
+
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} \
+            "cd /root/booking-intake-form/deploy && \
+             docker compose -f docker-compose.prod.yml up -d --build --force-recreate frontend && \
+             docker image prune -f"
