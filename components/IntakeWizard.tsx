@@ -36,14 +36,14 @@ const FORM_STEPS = [
     label: 'Numbers',
     subtitle: 'Your metrics matter',
     title: 'Helpful Details',
-    description: 'Collecting these details will help us get started easily',
+    description: 'Collecting these details will help us figure out if we\'re a good fit for your business.',
   },
   {
     id: 'vision',
     label: 'Vision',
     subtitle: "Where you're headed",
     title: 'The Vision',
-    description: 'What does success look like for you? If we worked together what would success look like.',
+    description: 'If we worked together what would success look like for you?',
   },
 ];
 
