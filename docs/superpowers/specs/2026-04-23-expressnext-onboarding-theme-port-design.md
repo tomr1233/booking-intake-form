@@ -16,7 +16,7 @@ All tokens, component primitives, and motion variants are copied from:
 Specifically:
 - `app/globals.css` — theme tokens (OKLCH).
 - `components/ui/button.tsx`, `input.tsx`, `textarea.tsx`, `label.tsx`, `select.tsx` — primitives.
-- `app/onboarding/page.tsx` — `StepIndicator` pattern.
+- `components/onboarding/onboarding-wizard.tsx` — `StepIndicator` pattern (function definition near the top of the file).
 - `components/onboarding/step-welcome.tsx`, `step-business-info.tsx`, `step-complete.tsx` — screen-level patterns and Framer Motion variants.
 
 ## Decisions (locked)
@@ -81,7 +81,7 @@ Copy `app/globals.css` from the onboarding project verbatim into a new `src/glob
 - `--card: oklch(0.12 0 0)` / `--card-foreground: oklch(0.95 0 0)`
 - `--border: oklch(0.22 0 0)` / `--input: oklch(0.15 0 0)` / `--ring: oklch(0.75 0.15 195)`
 - `--destructive: oklch(0.55 0.2 25)`
-- `--chart-1..5` — used only if the analysis dashboard renders charts with the token.
+- `--chart-1..5` — copied for parity with the onboarding tokens. Current analysis dashboard has no chart components, so these are unused at rest and add no visual surface. (Confirmed: no `chart` / `recharts` imports in `AnalysisDashboard.tsx` or `AdminResultsPage.tsx`.)
 - `--terminal-bg`, `--terminal-green` (`oklch(0.7 0.18 145)`), `--terminal-cyan`, `--terminal-yellow` — copied for the analysis dashboard's red/green flag callouts.
 - `--radius: 0.5rem` with `--radius-sm/md/lg/xl` calc chain.
 - `--font-sans: 'Geist', 'Geist Fallback'`, `--font-mono: 'Geist Mono', 'Geist Mono Fallback'`.
@@ -100,7 +100,9 @@ Dark theme is the default; no `dark` class toggle required.
 - `components/ui/label.tsx`
 - `components/ui/select.tsx`
 - `components/ui/field.tsx` — `<div className="space-y-2"><Label/>…children…{error && <p className="text-xs text-destructive">…</p>}</div>` wrapper. Local, not a shadcn primitive.
-- `components/StepIndicator.tsx` — ported from `expressnext-onboarding/app/onboarding/page.tsx`'s inline `StepIndicator`. Props: `currentStep: number`, `steps: { id: string; name: string; shortName: string }[]`.
+- `components/StepIndicator.tsx` — ported from `expressnext-onboarding/components/onboarding/onboarding-wizard.tsx`'s inline `StepIndicator`. Intentional API change vs the source: instead of closing over a module-scoped `STEPS` array, this component accepts the steps array as a prop so the booking form can drive its own 3-step flow without editing the component.
+  - Props: `currentStep: number` (zero-based index into `steps`), `steps: { id: string; name: string; shortName: string }[]`.
+  - Consumers must pass a non-negative `currentStep` — see the `FormStep` mapping below.
 
 ### Deleted
 - `components/UIComponents.tsx` — including the unused `RangeSlider`. All its exports have replacements via shadcn primitives + lucide icons.
@@ -127,7 +129,10 @@ Dark theme is the default; no `dark` class toggle required.
 - Privacy footer: lucide `Shield` icon + `text-muted-foreground`.
 
 ### Form steps (`FormStep.CURRENT_REALITY` and `FormStep.DREAM_FUTURE`)
-- `StepIndicator` at the top of the page (outside the content column), passed `currentStep={step}` and a `STEPS` array with entries for Welcome / Numbers / Vision.
+- `StepIndicator` at the top of the page (outside the content column).
+  - `FormStep` is defined as `WELCOME = -1`, `CURRENT_REALITY = 0`, `DREAM_FUTURE = 1`. The indicator must receive a zero-based index, so it's passed `currentStep={step + 1}` (mapping Welcome→0, Numbers→1, Vision→2).
+  - The `steps` array has three entries: `{ id: 'welcome', name: 'Welcome', shortName: 'Start' }`, `{ id: 'numbers', name: 'The Numbers', shortName: 'Numbers' }`, `{ id: 'vision', name: 'The Vision', shortName: 'Vision' }`.
+  - The indicator is rendered only on the form steps (CURRENT_REALITY, DREAM_FUTURE) — the welcome screen retains its standalone layout.
 - `// STEP_01` / `// STEP_02` mono eyebrow in `text-primary`.
 - Title: `text-2xl font-bold tracking-tight`.
 - Description: `text-muted-foreground`.
@@ -147,7 +152,7 @@ Dark theme is the default; no `dark` class toggle required.
 - Brand references: `text-brand-*` / `bg-brand-*` → `text-primary` / `bg-primary/10`.
 - Flag accents:
   - red flags: `text-destructive` + `bg-destructive/10` + `border-destructive/30`.
-  - green flags: custom utility `text-terminal-green` / `bg-terminal-green/10` (exposed via `@theme` `--color-terminal-green: var(--terminal-green)`).
+  - green flags: custom utility `text-terminal-green` / `bg-terminal-green/10`, exposed inside the existing `@theme inline { … }` block as `--color-terminal-green: var(--terminal-green)` (same block that aliases the other token variables; do not introduce a second `@theme` block).
 - Score/badge chips: `bg-secondary text-secondary-foreground border border-border`.
 - No structural changes (no layout reflows, no prop changes, no feature removal).
 
