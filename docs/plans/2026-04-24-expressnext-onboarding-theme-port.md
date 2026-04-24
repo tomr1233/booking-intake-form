@@ -341,16 +341,17 @@ interface FieldProps {
 }
 
 export function Field({ label, htmlFor, subLabel, error, className, children }: FieldProps) {
+  // The shadcn Label primitive uses `flex items-center gap-2`, so we keep the
+  // label text as the only Label child and render the sub-label as a sibling
+  // block below it to get the stacked layout shown in the onboarding app.
   return (
     <div className={cn('space-y-2', className)}>
-      <Label htmlFor={htmlFor}>
-        <span>{label}</span>
-        {subLabel && (
-          <span className="block text-xs text-muted-foreground font-normal mt-0.5">
-            {subLabel}
-          </span>
-        )}
-      </Label>
+      <Label htmlFor={htmlFor}>{label}</Label>
+      {subLabel && (
+        <p className="text-xs text-muted-foreground font-normal -mt-1">
+          {subLabel}
+        </p>
+      )}
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
@@ -1140,8 +1141,8 @@ Run: `git rm components/UIComponents.tsx`
 
 - [ ] **Step 3: Repo-wide grep for any residual legacy utilities**
 
-Run: `git grep -nE "bg-brand-|text-brand-|ring-brand-|selection:bg-brand-|bg-slate-|text-slate-|border-slate-|bg-red-|text-red-|bg-green-|text-green-|animate-fade-in-up|animate-slide-in|animate-scale-in" --exclude="docs/**"`
-Expected: empty (or matches only under `docs/`). Anything that surfaces must be fixed before proceeding.
+Run: `git grep -nE "bg-brand-|text-brand-|ring-brand-|selection:bg-brand-|bg-slate-|text-slate-|border-slate-|bg-red-|text-red-|bg-green-|text-green-|animate-fade-in-up|animate-slide-in|animate-scale-in" -- ':!docs'`
+Expected: empty output. (If you want to inspect the doc-only matches for reference, rerun the same grep without the pathspec.) Anything that surfaces outside `docs/` must be fixed before proceeding.
 
 - [ ] **Step 4: Typecheck**
 
