@@ -15,6 +15,7 @@
 ## Ground rules
 
 - **No test framework.** This project has no vitest/jest today; adding one is out of scope. Verification for each task is a mix of `npx tsc --noEmit`, `npm run build`, and a visual walkthrough in the browser (`npm run dev`) — the spec's "Testing & validation" section is authoritative.
+- **Pre-existing typecheck errors.** `npx tsc --noEmit` on the base branch already reports three pre-existing errors that are out of scope for this theme port: `services/api.ts:4` (two errors about `import.meta.env` — missing `vite/client` types in tsconfig) and `services/geminiService.ts:65` (`biggestBottleneck` field not on `IntakeFormData`). When a task's verification step says "no errors", it means **no new errors introduced by the task** — these three are acceptable baseline noise. If you're unsure whether a new error is yours, run `npx tsc --noEmit 2>&1 | grep -v "api\.ts:4" | grep -v "geminiService\.ts:65"` to filter them out.
 - **Commits per task.** Each task ends with a commit — no squashing, no combining tasks.
 - **Absolute paths.** Every file reference is relative to the repo root `/Users/tomraukete/workspace/github.com/tomr1233/booking-intake-form__worktrees/design-update/`.
 - **Don't invent.** Source-of-truth files live under `/Users/tomraukete/workspace/github.com/tomr1233/expressnext-onboarding/` — when copying token/primitive content, read the file and copy verbatim (preserving `'use client'` directives; they're harmless in Vite). Do not translate or "improve" them.
