@@ -1,40 +1,41 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, Shield } from 'lucide-react';
 
 export const ThankYouPage: React.FC = () => {
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center py-12">
-      <div className="max-w-2xl mx-auto px-4 text-center">
-        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-green-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+    <div className="container mx-auto px-4 py-8 lg:py-12 max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col items-center text-center space-y-6 pt-8"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+          className="p-4 rounded-full bg-[var(--terminal-green)]/10 border border-[var(--terminal-green)]/30"
+        >
+          <CheckCircle2 className="w-12 h-12 text-[var(--terminal-green)]" />
+        </motion.div>
 
-          <div className="relative z-10">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-
-            <h1 className="text-3xl font-bold text-slate-800 mb-4">Thank You!</h1>
-
-            <p className="text-slate-600 mb-2">
-              Your application has been submitted successfully.
-            </p>
-
-            <p className="text-slate-500 text-sm">
-              We'll review your information and see you on the call!
-            </p>
+        <div className="space-y-3">
+          <div className="text-[var(--terminal-green)] font-mono text-sm">
+            // INTAKE_COMPLETE
           </div>
+          <h1 className="text-3xl font-bold tracking-tight">Thank You!</h1>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Your application has been submitted successfully. We&apos;ll review your information
+            and see you on the call.
+          </p>
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          <span className="inline-flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            Your information is secure and confidential.
-          </span>
+        <p className="text-xs text-muted-foreground/70 inline-flex items-center gap-1 pt-6">
+          <Shield className="w-3 h-3" />
+          Your information is secure and confidential.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };
