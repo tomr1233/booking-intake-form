@@ -113,7 +113,7 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ data, anal
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-foreground to-muted-foreground rounded-xl shadow-lg text-white p-6">
+                <div className="bg-card border border-primary/30 rounded-xl shadow-lg text-foreground p-6">
                     <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-3">The Pitch Angle</h3>
                     <p className="font-light leading-relaxed">
                         {analysis.closingStrategy}
@@ -137,7 +137,7 @@ export const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ data, anal
                 </h3>
                 <div className="space-y-4">
                     {analysis.strategicQuestions.map((q, i) => (
-                        <div key={i} className="flex gap-4 p-4 rounded-lg bg-secondary border border-border transition-hover hover:bg-secondary">
+                        <div key={i} className="flex gap-4 p-4 rounded-lg bg-secondary border border-border transition-colors hover:bg-secondary/70">
                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-card text-primary font-bold text-sm shadow-sm border border-border shrink-0">
                                 {i + 1}
                             </span>
