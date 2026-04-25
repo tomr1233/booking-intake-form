@@ -60,7 +60,7 @@ export const AdminResultsPage: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-muted-foreground font-medium">Analyzing submission...</p>
-          <p className="text-slate-400 text-sm mt-2">This usually takes 10-30 seconds</p>
+          <p className="text-muted-foreground text-sm mt-2">This usually takes 10-30 seconds</p>
         </div>
       </div>
     );
@@ -76,7 +76,7 @@ export const AdminResultsPage: React.FC = () => {
             </svg>
           </div>
           <p className="text-destructive font-medium">Analysis failed</p>
-          <p className="text-slate-500 text-sm mt-2">Please contact support if this persists.</p>
+          <p className="text-muted-foreground text-sm mt-2">Please contact support if this persists.</p>
         </div>
       </div>
     );
