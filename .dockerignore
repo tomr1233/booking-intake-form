@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+.idea
+.vscode
+*.log
+.DS_Store
+
+# Never bake local/dev env into the image — VITE_API_URL comes from the build ARG.
+.env
+.env.local
+.env.*.local
+deploy/.env

@@ -1,8 +1,12 @@
-# Replace YOUR_DOMAIN with your actual domain (e.g., clarity.example.com)
-# Caddy will automatically obtain and renew SSL certificates
+# DOMAIN comes from the .env file. Caddy automatically obtains and renews
+# SSL certificates for it.
+#
+# `backend` and `frontend` resolve over the shared `clarity-network` docker
+# network. The backend now runs in its own stack — it must be attached to
+# clarity-network and reachable as `backend:8080`.
 
 {$DOMAIN:localhost} {
-    # API requests -> backend
+    # API requests -> backend (separate stack on the shared network)
     handle /api/* {
         reverse_proxy backend:8080
     }

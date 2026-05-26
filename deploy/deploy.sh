@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}=== Clarity Deployment Script ===${NC}"
+echo -e "${GREEN}=== Clarity Frontend Deployment ===${NC}"
 
 # Check if .env exists
 if [ ! -f .env ]; then
@@ -17,8 +17,10 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Load environment variables
+# Load environment variables (also exported so docker compose can interpolate them)
+set -a
 source .env
+set +a
 
 # Validate required variables
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "your-domain.com" ]; then
@@ -26,62 +28,33 @@ if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "your-domain.com" ]; then
     exit 1
 fi
 
-if [ -z "$DB_PASSWORD" ] || [ "$DB_PASSWORD" = "change-me-to-a-strong-password" ]; then
-    echo -e "${RED}Error: DB_PASSWORD not set in .env${NC}"
-    exit 1
-fi
-
-if [ -z "$GEMINI_API_KEY" ] || [ "$GEMINI_API_KEY" = "your-gemini-api-key" ]; then
-    echo -e "${RED}Error: GEMINI_API_KEY not set in .env${NC}"
-    exit 1
-fi
-
 echo -e "${GREEN}Configuration validated${NC}"
-echo "  Domain: $DOMAIN"
+echo "  Domain:        $DOMAIN"
+echo "  VITE_API_URL:  ${VITE_API_URL:-<same-origin /api/*>}"
 
-# Build and start containers
-echo -e "${YELLOW}Building containers...${NC}"
+# Ensure the shared docker network exists (also used by the backend stack)
+if ! docker network inspect clarity-network >/dev/null 2>&1; then
+    echo -e "${YELLOW}Creating shared docker network 'clarity-network'...${NC}"
+    docker network create clarity-network
+fi
+
+# Build and start the frontend stack
+echo -e "${YELLOW}Building frontend...${NC}"
 docker compose -f docker-compose.prod.yml build
 
-echo -e "${YELLOW}Starting services...${NC}"
+echo -e "${YELLOW}Starting frontend + caddy...${NC}"
 docker compose -f docker-compose.prod.yml up -d
-
-# Wait for postgres to be ready
-echo -e "${YELLOW}Waiting for PostgreSQL...${NC}"
-sleep 5
-
-# Run migrations
-echo -e "${YELLOW}Running database migrations...${NC}"
-docker compose -f docker-compose.prod.yml exec -T backend sh -c '
-    for f in migrations/*.up.sql; do
-        if [ -f "$f" ]; then
-            echo "Applying $f"
-            # Use environment variable for connection
-            PGPASSWORD=$(echo $DATABASE_URL | sed "s/.*:\([^@]*\)@.*/\1/") \
-            PGHOST=$(echo $DATABASE_URL | sed "s/.*@\([^:]*\):.*/\1/") \
-            PGPORT=$(echo $DATABASE_URL | sed "s/.*:\([0-9]*\)\/.*/\1/") \
-            PGUSER=$(echo $DATABASE_URL | sed "s/.*\/\/\([^:]*\):.*/\1/") \
-            PGDATABASE=$(echo $DATABASE_URL | sed "s/.*\/\([^?]*\).*/\1/")
-        fi
-    done
-'
-
-# Alternative: run migrations using psql from postgres container
-docker compose -f docker-compose.prod.yml exec -T postgres sh -c '
-    for f in /tmp/migrations/*.up.sql; do
-        if [ -f "$f" ]; then
-            echo "Applying $f"
-            psql -U clarity -d clarity_intake -f "$f" 2>/dev/null || true
-        fi
-    done
-' 2>/dev/null || echo "Note: Run migrations manually if needed"
 
 echo -e "${GREEN}=== Deployment Complete ===${NC}"
 echo ""
 echo "Your app should be available at: https://$DOMAIN"
 echo ""
+echo -e "${YELLOW}Reminder:${NC} the backend stack must be running and attached to"
+echo "the 'clarity-network' network, reachable as 'backend:8080', or /api/*"
+echo "requests will return 502."
+echo ""
 echo "Useful commands:"
 echo "  docker compose -f docker-compose.prod.yml logs -f     # View logs"
 echo "  docker compose -f docker-compose.prod.yml ps          # Check status"
 echo "  docker compose -f docker-compose.prod.yml down        # Stop services"
-echo "  docker compose -f docker-compose.prod.yml pull        # Update images"
+echo "  docker compose -f docker-compose.prod.yml up -d --build  # Rebuild + restart"
