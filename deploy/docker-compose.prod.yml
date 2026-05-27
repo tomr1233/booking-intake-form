@@ -17,8 +17,8 @@ services:
     networks:
       - clarity-network
 
-  # Caddy reverse proxy — automatic HTTPS. Proxies /api/* to the backend, which
-  # now runs in its own stack attached to the shared clarity-network.
+  # Caddy reverse proxy — automatic HTTPS. Proxies /api/* to the backend
+  # (service `api` in the intake-form-api stack) over the shared clarity-network.
   caddy:
     image: caddy:2-alpine
     container_name: clarity-caddy
@@ -38,7 +38,7 @@ services:
       - clarity-network
 
 networks:
-  # Shared with the backend stack so Caddy can reach `backend:8080`.
+  # Shared with the backend stack so Caddy can reach `api:8080`.
   # Create it once on the host with: docker network create clarity-network
   clarity-network:
     external: true

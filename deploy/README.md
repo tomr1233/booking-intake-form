@@ -20,14 +20,14 @@ terminates HTTPS and proxies those requests to the backend over the shared
                 ▼                                  ▼
         ┌─────────────┐                     ┌─────────────┐
         │   Backend   │  (separate stack)   │  Frontend   │  (this stack)
-        │  backend:8080                     │  nginx :80  │
+        │   api:8080  │                     │  nginx :80  │
         └──────┬──────┘                     └─────────────┘
                ▼
         ┌─────────────┐
-        │  PostgreSQL │  (separate stack)
+        │  Database   │  (managed / external — not in either compose)
         └─────────────┘
 
-        ── all containers share the external `clarity-network` ──
+        ── api + frontend + caddy share the external `clarity-network` ──
 ```
 
 > **Note:** `VITE_API_URL` is baked into the bundle at *build time* (it's an
@@ -66,18 +66,33 @@ terminates HTTPS and proxies those requests to the backend over the shared
    VITE_API_URL=            # leave empty for same-domain
    ```
 
-4. **Make sure the backend stack is up and on the shared network.** Its service
-   must be reachable as `backend:8080` on `clarity-network`. In the backend's
-   `docker-compose`, that means something like:
+4. **Make sure the backend stack is up and on the shared network.** Its `api`
+   service must be reachable as `api:8080` on `clarity-network`. Add the network
+   to the `intake-form-api` compose (only the two `networks` additions are new):
    ```yaml
    services:
-     backend:                 # service name -> network alias "backend"
-       # ...
-       networks:
-         - clarity-network
-   networks:
-     clarity-network:
-       external: true
+     api:
+       build:
+         context: .
+         dockerfile: Dockerfile.prod
+       container_name: intake-form-api
+       restart: unless-stopped
+       ports:
+         - "127.0.0.1:8080:8080"   # optional now — container-to-container uses the network
+       env_file:
+         - .env
+       networks:                   # <-- add
+         - clarity-network         # <-- add
+       healthcheck:
+         test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+         interval: 30s
+         timeout: 5s
+         retries: 3
+         start_period: 10s
+
+   networks:                       # <-- add
+     clarity-network:              # <-- add
+       external: true              # <-- add
    ```
 
 5. **Run the deployment:**
@@ -123,10 +138,10 @@ docker compose -f docker-compose.prod.yml up -d --build
 ## Troubleshooting
 
 ### `/api/*` requests return 502
-Caddy can't reach the backend. Confirm the backend container is running and
-attached to the shared network with the `backend` alias:
+Caddy can't reach the backend. Confirm the `api` container is running and
+attached to the shared network:
 ```bash
-docker network inspect clarity-network        # backend + caddy should both appear
+docker network inspect clarity-network        # intake-form-api + caddy should both appear
 docker compose -f docker-compose.prod.yml logs -f caddy
 ```
 

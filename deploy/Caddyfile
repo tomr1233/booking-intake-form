@@ -1,19 +1,19 @@
 # DOMAIN comes from the .env file. Caddy automatically obtains and renews
 # SSL certificates for it.
 #
-# `backend` and `frontend` resolve over the shared `clarity-network` docker
-# network. The backend now runs in its own stack — it must be attached to
-# clarity-network and reachable as `backend:8080`.
+# `api` and `frontend` resolve over the shared `clarity-network` docker network.
+# The backend runs in its own stack (intake-form-api) — it must be attached to
+# clarity-network, where its service is reachable as `api:8080`.
 
 {$DOMAIN:localhost} {
-    # API requests -> backend (separate stack on the shared network)
+    # API requests -> backend (intake-form-api stack on the shared network)
     handle /api/* {
-        reverse_proxy backend:8080
+        reverse_proxy api:8080
     }
 
     # Health check endpoint
     handle /health {
-        reverse_proxy backend:8080
+        reverse_proxy api:8080
     }
 
     # Everything else -> frontend
