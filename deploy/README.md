@@ -1,119 +1,92 @@
 # Deployment Guide
 
-Deploy the Clarity **frontend** to a VPS with Docker Compose. The backend (Go API)
-and PostgreSQL run in their own stack (the `intake-form-api` repo) and are no
-longer brought up here — the two stacks talk over a shared docker network.
+Deploy the Clarity **frontend** to the VPS with Docker Compose. The backend
+(Go API) runs in its own stack (the `intake-form-api` repo). TLS and routing
+for `intake.expressnext.app` are handled by the **Caddy that already runs as a
+host process** on the VPS — this stack does not run its own proxy.
 
 ## Topology
 
-The frontend calls `/api/*` on the **same domain** it was loaded from. Caddy
-terminates HTTPS and proxies those requests to the backend over the shared
-`clarity-network`. Because it's same-origin, no CORS configuration is needed.
+The frontend calls `/api/*` on the **same domain** it was loaded from. The host
+Caddy splits that domain: API traffic goes to the backend, everything else to
+the frontend. Both upstreams are bound to host loopback. Same-origin, so no CORS.
 
 ```
-                         ┌─────────────┐
-   https://DOMAIN  ──────▶   Caddy     │   (this stack)
-                         │  (HTTPS)    │
-                         └──────┬──────┘
-                  /api/*, /health │  everything else
-                ┌────────────────┴────────────────┐
-                ▼                                  ▼
-        ┌─────────────┐                     ┌─────────────┐
-        │   Backend   │  (separate stack)   │  Frontend   │  (this stack)
-        │   api:8080  │                     │  nginx :80  │
-        └──────┬──────┘                     └─────────────┘
-               ▼
-        ┌─────────────┐
-        │  Database   │  (managed / external — not in either compose)
-        └─────────────┘
-
-        ── api + frontend + caddy share the external `clarity-network` ──
+        https://intake.expressnext.app
+                     │
+                     ▼
+            ┌──────────────────┐
+            │   Caddy (HOST)   │   pre-existing, terminates TLS
+            └───┬──────────┬───┘
+       /api/*   │          │   everything else
+       /health  │          │
+                ▼          ▼
+        127.0.0.1:8080   127.0.0.1:3000
+        ┌────────────┐   ┌─────────────┐
+        │  Backend   │   │  Frontend   │  (this stack)
+        │  (api)     │   │  nginx :80  │
+        └────────────┘   └─────────────┘
 ```
 
 > **Note:** `VITE_API_URL` is baked into the bundle at *build time* (it's an
-> `import.meta.env` value, not a runtime env var). For the same-domain setup,
+> `import.meta.env` value, not a runtime env var). For this same-domain setup,
 > leave it **empty** so the app uses same-origin `/api/*`. Only set a full URL
-> if the API lives on a different domain — and then the backend must allow that
-> origin via CORS.
+> if the API is served from a different domain — and then the backend must allow
+> that origin via CORS.
 
 ## Prerequisites
 
 - VPS with Docker and Docker Compose installed
-- Domain pointed to your VPS IP address
-- Ports 80 and 443 open in firewall
-- The backend stack running on the same host (see below)
+- The host Caddy already serving `intake.expressnext.app`
+- The backend stack running and published on `127.0.0.1:8080`
 
 ## Quick Start
 
-1. **Clone the repo on your VPS:**
+1. **Clone / update the repo on the VPS:**
    ```bash
    git clone https://github.com/tomr1233/booking-intake-form.git
    cd booking-intake-form/deploy
    ```
 
-2. **Create the shared network** (once per host — both stacks attach to it):
-   ```bash
-   docker network create clarity-network
-   ```
-
-3. **Create the environment file:**
+2. **(Optional) environment file** — only needed if the API lives on a different
+   domain. For same-domain, skip it or leave `VITE_API_URL` empty:
    ```bash
    cp .env.example .env
-   nano .env   # or vim .env
-   ```
-   ```
-   DOMAIN=clarity.yourdomain.com
-   VITE_API_URL=            # leave empty for same-domain
+   # VITE_API_URL=            # empty -> same-origin /api/*
    ```
 
-4. **Make sure the backend stack is up and on the shared network.** Its `api`
-   service must be reachable as `api:8080` on `clarity-network`. Add the network
-   to the `intake-form-api` compose (only the two `networks` additions are new):
-   ```yaml
-   services:
-     api:
-       build:
-         context: .
-         dockerfile: Dockerfile.prod
-       container_name: intake-form-api
-       restart: unless-stopped
-       ports:
-         - "127.0.0.1:8080:8080"   # optional now — container-to-container uses the network
-       env_file:
-         - .env
-       networks:                   # <-- add
-         - clarity-network         # <-- add
-       healthcheck:
-         test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
-         interval: 30s
-         timeout: 5s
-         retries: 3
-         start_period: 10s
-
-   networks:                       # <-- add
-     clarity-network:              # <-- add
-       external: true              # <-- add
-   ```
-
-5. **Run the deployment:**
+3. **Build and start the frontend:**
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-
-   Or manually:
-   ```bash
+   chmod +x deploy.sh && ./deploy.sh
+   # or:
    docker compose -f docker-compose.prod.yml up -d --build
    ```
+   This serves the frontend on `127.0.0.1:3000`.
 
-## DNS Setup
+4. **Point the host Caddy at it.** In your host Caddy config (e.g.
+   `/etc/caddy/Caddyfile`), the `intake.expressnext.app` block should be:
+   ```caddy
+   intake.expressnext.app {
+       handle /api/*  { reverse_proxy 127.0.0.1:8080 }
+       handle /health { reverse_proxy 127.0.0.1:8080 }
+       handle         { reverse_proxy 127.0.0.1:3000 }
+   }
+   ```
+   Then reload:
+   ```bash
+   sudo systemctl reload caddy
+   ```
+   (A copy of this block lives in `Caddyfile` in this repo for reference — it is
+   **not** loaded by the docker stack.)
 
-Point your domain to your VPS IP:
+## Verify
+
+```bash
+curl -s  http://127.0.0.1:8080/health           # backend reachable locally -> 200
+curl -sI http://127.0.0.1:3000                   # frontend container -> 200
+curl -sI https://intake.expressnext.app          # through Caddy -> 200, Server: Caddy
+curl -s  https://intake.expressnext.app/health   # routed to backend -> 200
 ```
-A    clarity.yourdomain.com    YOUR_VPS_IP
-```
-
-Caddy will automatically obtain SSL certificates from Let's Encrypt.
 
 ## Useful Commands
 
@@ -121,41 +94,40 @@ Caddy will automatically obtain SSL certificates from Let's Encrypt.
 # View logs
 docker compose -f docker-compose.prod.yml logs -f
 
-# View specific service logs
-docker compose -f docker-compose.prod.yml logs -f caddy
-
-# Check service status
+# Check status
 docker compose -f docker-compose.prod.yml ps
-
-# Stop everything
-docker compose -f docker-compose.prod.yml down
 
 # Update and redeploy (rebuilds the frontend bundle)
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
+
+# Stop
+docker compose -f docker-compose.prod.yml down
 ```
 
 ## Troubleshooting
 
-### `/api/*` requests return 502
-Caddy can't reach the backend. Confirm the `api` container is running and
-attached to the shared network:
+### The whole page returns 502
+The host Caddy can't reach an upstream. Check both are listening:
 ```bash
-docker network inspect clarity-network        # intake-form-api + caddy should both appear
-docker compose -f docker-compose.prod.yml logs -f caddy
+docker compose -f docker-compose.prod.yml ps     # clarity-frontend should be Up
+curl -sI http://127.0.0.1:3000                    # frontend
+curl -s  http://127.0.0.1:8080/health             # backend
+sudo systemctl status caddy --no-pager
 ```
+Also make sure no container is holding ports 80/443 away from the host Caddy
+(`docker ps` — there should be no Caddy container from this stack).
 
-### Frontend still points at localhost
-`VITE_API_URL` is baked in at build time. If a stale value is cached, rebuild
-without cache:
+### Submissions hit `localhost:8080` / fail
+The served bundle is a stale build. `localhost:8080` is the dev-mode fallback in
+`services/api.ts`; a production build uses same-origin `/api/*`. Rebuild — a
+`restart` is not enough:
 ```bash
 docker compose -f docker-compose.prod.yml build --no-cache frontend
 docker compose -f docker-compose.prod.yml up -d
 ```
+Then hard-refresh the browser (Cmd/Ctrl+Shift+R) — nginx serves JS as immutable.
 
-### SSL certificate issues
-Caddy needs ports 80 and 443 open:
-```bash
-sudo ufw allow 80
-sudo ufw allow 443
-```
+### `/api/*` returns 404 / HTML instead of JSON
+The host Caddy is sending `/api/*` to the frontend instead of the backend. Add
+the `handle /api/*` block above and reload Caddy.

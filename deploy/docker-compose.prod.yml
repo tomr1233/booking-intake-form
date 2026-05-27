@@ -1,48 +1,20 @@
 services:
-  # Frontend (React/Vite) built and served by nginx, behind Caddy
+  # Frontend (React/Vite) built and served by nginx.
+  # TLS + routing is handled by the pre-existing reverse proxy on the host,
+  # which forwards intake.expressnext.app -> this container's published port.
   frontend:
     build:
       context: ../
       dockerfile: deploy/Dockerfile
       args:
-        # Same-domain deploy: leave empty so the app calls /api/* on the same
-        # origin and Caddy proxies those requests to the backend. Set to a full
-        # URL only if the API lives on a DIFFERENT domain (then the backend
+        # Leave empty for same-domain: the app calls /api/* on the same origin,
+        # and the host proxy must route /api/* to the backend. Set to a full URL
+        # only if the API is served from a DIFFERENT domain (then the backend
         # must allow that origin via CORS).
         VITE_API_URL: ${VITE_API_URL:-}
     container_name: clarity-frontend
     restart: unless-stopped
-    expose:
-      - "80"
-    networks:
-      - clarity-network
-
-  # Caddy reverse proxy — automatic HTTPS. Proxies /api/* to the backend
-  # (service `api` in the intake-form-api stack) over the shared clarity-network.
-  caddy:
-    image: caddy:2-alpine
-    container_name: clarity-caddy
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN=${DOMAIN}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - frontend
-    networks:
-      - clarity-network
-
-networks:
-  # Shared with the backend stack so Caddy can reach `api:8080`.
-  # Create it once on the host with: docker network create clarity-network
-  clarity-network:
-    external: true
-
-volumes:
-  caddy_data:
-  caddy_config:
+      # Bound to loopback only — the host Caddy reaches it at 127.0.0.1:3000
+      # and the raw frontend isn't exposed publicly.
+      - "127.0.0.1:3000:80"

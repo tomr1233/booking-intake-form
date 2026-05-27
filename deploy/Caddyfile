@@ -1,29 +1,24 @@
-# DOMAIN comes from the .env file. Caddy automatically obtains and renews
-# SSL certificates for it.
+# REFERENCE ONLY — this is NOT loaded by this docker stack.
 #
-# `api` and `frontend` resolve over the shared `clarity-network` docker network.
-# The backend runs in its own stack (intake-form-api) — it must be attached to
-# clarity-network, where its service is reachable as `api:8080`.
+# intake.expressnext.app is served by the Caddy running as a HOST process on
+# the VPS. Put the block below into that host Caddy config (e.g.
+# /etc/caddy/Caddyfile), then reload it:  sudo systemctl reload caddy
+#
+# It splits the same domain: /api/* and /health go to the backend
+# (intake-form-api, published on 127.0.0.1:8080); everything else goes to the
+# frontend container (published on 127.0.0.1:3000). Same-origin, so no CORS.
 
-{$DOMAIN:localhost} {
-    # API requests -> backend (intake-form-api stack on the shared network)
+intake.expressnext.app {
+    # API + health check -> backend (intake-form-api)
     handle /api/* {
-        reverse_proxy api:8080
+        reverse_proxy 127.0.0.1:8080
     }
-
-    # Health check endpoint
     handle /health {
-        reverse_proxy api:8080
+        reverse_proxy 127.0.0.1:8080
     }
 
-    # Everything else -> frontend
+    # Everything else -> frontend (Clarity SPA)
     handle {
-        reverse_proxy frontend:80
-    }
-
-    # Logging
-    log {
-        output stdout
-        format console
+        reverse_proxy 127.0.0.1:3000
     }
 }
