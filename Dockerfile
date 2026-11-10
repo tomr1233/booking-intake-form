@@ -17,9 +17,12 @@ RUN npm run build
 
 # nginx as uid 101, listening on 8080, with temp files under /tmp (Pod Security "restricted").
 FROM nginxinc/nginx-unprivileged:1.31.7-alpine3.24@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+# The pinned base lags Alpine's security fixes; Trivy fails the build without this.
+USER root
+RUN apk upgrade --no-cache
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY deploy/nginx.k8s.conf /etc/nginx/conf.d/default.conf
+USER 101
 # A bad config fails the build rather than the rollout.
 RUN nginx -t
 EXPOSE 8080
-USER 101
